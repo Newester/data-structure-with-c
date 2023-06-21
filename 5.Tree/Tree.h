@@ -29,7 +29,7 @@ void BinaryTree_Destroy(TreeNode* root);
 
 TreeNode* BST_FromArray(DataType* arr, int size);
 TreeNode* BST_Insert(TreeNode* root, DataType data);
-TreeNode* BST_Delete(TreeNode* root, DataType data) 
+TreeNode* BST_Delete(TreeNode* root, DataType data);
 TreeNode* BST_Find(TreeNode* root, DataType data);
 TreeNode* BST_FindMin(TreeNode* root);
 TreeNode* BST_FindMax(TreeNode* root);
@@ -39,12 +39,5 @@ TreeNode* AVL_Insert(TreeNode* root, DataType data);
 TreeNode* AVL_Delete(TreeNode* root, DataType data);
 TreeNode* AVL_LeftDown(TreeNode* ub);
 TreeNode* AVL_RightRown(TreeNode* ub);
-
-RbTreeNode* RBT_FromArray(DataType* arr, int size);
-void RBT_Destroy(RbTreeNode* root);
-RbTreeNode* RBT_Insert(RbTreeNode* root, DataType data);
-RbTreeNode* RBT_Delete(RbTreeNode* root, DataType data);
-RbTreeNode* RBT_LeftDown(RbTreeNode* ub);
-RbTreeNode* RBT_RightDown(RbTreeNode* ub);
 
 #endif // !__BINARY_SEARCH_TREE_H__

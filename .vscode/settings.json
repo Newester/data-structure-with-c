@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "xutility": "c",
-        "xiosbase": "c"
+        "xiosbase": "c",
+        "vector": "c",
+        "xstring": "c"
     }
 }
