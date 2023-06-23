@@ -107,155 +107,155 @@ RbTreeNode* RBT_Insert(RbTreeNode* root, DataType data) {
  * 1. 父黑兄黑无子的品字结构，父节点无法配平，先将兄弟节点涂红，再让爷爷节点去配平
  * 2. 父黑兄红侄黑侄孙红的情况，会出现双红形态，可按照插入节点出现双红的情况去配平
 */
-void RBT_Delete(RbTreeNode** root, DataType data) {
-    if(NULL == root || NULL == *root || *root == nil) {
-        return;
+RbTreeNode* RBT_Delete(RbTreeNode* root, DataType data) {
+    if(NULL == root || root == nil) {
+        return NULL;
     }
-    if(data < (*root)->data) {
-        RBT_Delete((*root)->left, data);
-    } else if(data > (*root)->data) {
-        RBT_Delete((*root)->right, data);
+    RbTreeNode* ret = NULL;
+    if(data < root->data) {
+        root->left = RBT_Delete(root->left, data);
+        return root;
+    } else if(data > root->data) {
+        root->right = RBT_Delete(root->right, data);
+        return root;
+    } else if(root->left != nil) {
+        RbTreeNode* left_max = RBT_FindMax(root->left);
+        root->data = left_max->data;
+        root->left = RBT_Delete(root->left, left_max->data);
+        return root;
+    } else if(root->right != nil) {
+        RbTreeNode* right_min = RBT_FindMin(root->right);
+        root->data = right_min->data;
+        root->right = RBT_Delete(root->right, right_min->data);
+        return root;
     } else {
-        if((*root)->left != nil || (*root)->right != nil) {
-            if((*root)->left != nil) {
-                RbTreeNode* left_max = RBT_FindMax((*root)->left);
-                (*root)->data = left_max->data;
-                RBT_Delete(left_max, left_max->data);
-                return root;
-            } else {
-                RbTreeNode* right_min = RBT_FindMin((*root)->right);
-                (*root)->data = right_min->data;
-                RBT_Delete(right_min, right_min->data);
-                return root;
-            }
+        Color c = root->color;
+        RbTreeNode* parent = root->parent;
+        free(root);
+        if(NULL == parent) {
+            return NULL;
         } else {
-            RbTreeNode* parent = (*root)->parent;
-            RbTreeNode* node = root;
-            if(NULL == parent) {
-                free(root);
-                *root = NULL;
-            }
-
-            // --> NULL != parent
-            Color parent_color = parent->color;
-            Color delete_color = (*root)->color;
-            int delete_left = 0;
-            if(parent->left == root) {
-                parent->left = nil;
-                delete_left = 1;
+            if(RBT_RED == c) {
+                return nil;
             } else {
-                parent->right = nil;
-            }
-            free(root);
-            if(RBT_RED  == delete_color) {
-            } else /* RBT_BLACK == root->color */ {
-                RbTreeNode* brother = NULL;
-                if(0 == delete_left) {
-                    brother = parent->left;
-                } else {
-                    brother = parent->right;
-                }
-                // 先修树高，再修黑高; 先保证局部再寻求整体
-                if(brother->left == nil && brother->right == nil) /* 兄弟节点没有孩子 */ {
-                    // 兄弟节点没有孩子，删除节点后树高是平衡的
-                    if(RBT_RED == parent_color) {
-                        parent->color = RBT_RED;
-                        brother->color = RBT_BLACK;
-                    } else {
-                        // 父亲节点是黑色，父亲节点不平衡，此时需看爷爷节点
-                        brother->color = RBT_RED;
-                        RBT_DeleteReblance(parent->parent);
-                    }
-                } else if(brother->left == nil) /* 兄弟节点只有右孩子 */ {
-                    if(1 == delete_left) /* RR */ {
-                        RBT_LeftDown(parent);
-                        if(RBT_RED == parent->color) {
-                        } else {
-                            if(RBT_RED == brother->color) {
-                                brother->color = RBT_BLACK;
-                            } else {
-                                brother->right->color = RBT_BLACK;
-                            }
-                        }
-                    } else /* LR */ {
-                        RBT_LeftDown(brother);
-                        RBT_RightDown(parent);
-                        if(RBT_RED == parent->color) {
-                            parent->color = RBT_BLACK;
-                        } else {
-                            if(RBT_RED == brother->color) {
-                                brother->color = RBT_BLACK;
-                            } else {
-                                brother->parent->color = RBT_BLACK;
-                            }
-                        }
-                    }
-                } else if(brother->right == nil) /* 兄弟节点只有左孩子 */ {
-                    if(0 == delete_left) /* LL */ {
-                        RBT_RightDown(parent);
-                        if(RBT_RED == parent->color) {
-                        } else {
-                            if(RBT_RED == brother->color) {
-                                brother->color = RBT_BLACK;
-                            } else {
-                                if(RBT_RED == brother->color) {
-                                    brother->color = RBT_BLACK;
-                                } else {
-                                    brother->left->color = RBT_BLACK;
-                                }
-                            }
-                        }
-                    } else /* RL */ {
-                        RBT_RightDown(brother);
-                        RBT_LeftDown(parent);
-                        if(RBT_RED == parent->color) {
-                            parent->color = RBT_BLACK;
-                        } else {
-                            if(RBT_RED == brother->color) {
-                                brother->color = RBT_BLACK;
-                            } else {
-                                brother->parent->color = RBT_BLACK;
-                            }
-                        }
-                    }
-                } else /* 兄弟节点有两个孩子 */ {
-                    RbTreeNode* nephew = NULL;
-                    if(1 == delete_left) {
-                        RBT_LeftDown(parent);
-                        nephew = brother->right;
-                    } else {
-                        RBT_RightDown(parent);
-                        nephew = brother->left;
-                    }
-                    if(RBT_RED == parent_color) {
-                        parent->color = RBT_BLACK;
-                        brother->color = RBT_RED;
-                        nephew->color = RBT_BLACK;
-                    } else /* RBT_BLACK == parent_color */ {
-                        if(RBT_BLACK == brother->color) {
-                            // 父亲节点是黑色，被删叶子节点是黑色，兄弟节点是黑色，两个侄子节点必然是红色
-                            nephew = RBT_BLACK;
-                        } else {
-                            // 父亲节点是黑色，被删叶子节点是黑色，兄弟节点是红色，两个侄子节点必然是黑色
-                            RbTreeNode* parent_child = NULL;
-                            if(1 == delete_left) {
-                                RBT_LeftDown(parent);
-                                parent_child = parent->right;
-                            } else {
-                                RBT_RightDown(parent);
-                                parent_child = parent->left;
-                            }
-                            parent->color = RBT_RED;
-                            if(RBT_RED == parent_child->color) {
-                                RBT_InsertRebalance(parent_child);
-                            }
-                        }
-                    }
-                }
+                RBT_DeleteReblance(parent);
+                return nil;
             }
         }
     }
 }
+
+void RBT_DeleteReblance(RbTreeNode* node) {
+    // 父节点是红色
+    if(RBT_RED == node->color) {
+        if(node->left != nil) {
+            if(node->left->left == nil && node->left->right == nil) {
+                node->color = RBT_BLACK;
+                node->right->color = RBT_RED;
+            } else if(node->left->left == nil) {
+                RBT_LeftDown(node->left);
+                RBT_RightDown(node);
+                node->color = RBT_BLACK;
+
+            } else if(node->left->right == nil) {
+                RBT_RightDown(node);
+                node->color = RBT_BLACK;
+            } else {
+                RBT_RightDown(node);
+                node->parent->color = RBT_RED;
+                node->color = RBT_BLACK;
+                node->parent->left->color = RBT_BLACK;
+            }
+
+        } else {
+            if(node->right->left == nil && node->right->right == nil) {
+                node->color = RBT_BLACK;
+                node->left->color = RBT_RED;
+            } else if(node->right->right == nil) {
+                RBT_RightDown(node->right);
+                RBT_LeftDown(node);
+                node->color = RBT_BLACK;
+
+            } else if(node->right->left == nil) {
+                RBT_LeftDown(node);
+                node->color = RBT_BLACK;
+            } else {
+                RBT_LeftDown(node);
+                node->parent->color = RBT_RED;
+                node->color = RBT_BLACK;
+                node->parent->right->color = RBT_BLACK;
+            }
+        }
+    } else /* 父节点是黑色 */ {
+        if(node->left != nil) /* 父节点剩下左儿子 */{
+            if(RBT_RED == node->left->color) {
+                RBT_RightDown(node);
+                node->parent->color = RBT_BLACK;
+                node->left->color = RBT_RED;
+            } else if(node->left->left != nil && node->left->right != nil) {
+                RBT_RightDown(node);
+                node->parent->left->color = RBT_BLACK;
+            } else if(node->left->left == nil) {
+                RBT_LeftDown(node->left);
+                RBT_RightDown(node);
+                node->parent->color = RBT_BLACK;
+            } else /* 父节点的左儿子是黑色，且是叶子节点 */ {
+                node->left->color = RBT_RED;
+                if(NULL == node->parent) {
+                    return;
+                } else if(node->parent->left = node) {
+                    if(RBT_RED == node->parent->color) {
+                        RBT_LeftDown(node->parent);
+                        if(RBT_RED == node->parent->right->color) {
+                            RBT_InsertRebalance(node->parent->right);
+                        }
+                    } else /* RBT_BLACK == node->parent->color */ {
+                        RbTreeNode* b = node->parent->right;
+                        if(RBT_BLACK == b->color) {
+                            if(RBT_BLACK == b->left->color && RBT_BLACK == b->right->color) {
+                                b->color = RBT_RED;
+                                RBT_DeleteReblance(node->parent);
+                            } else if(RBT_RED == b->right->color) {
+                                RBT_LeftDown(node->parent);
+                                b->right->color = RBT_BLACK;
+                            } else {
+                                if(b->right->left != nil && b->right->right != nil) {
+                                    RBT_LeftDown(node->parent);
+                                    if(RBT_RED == b->right->color) {
+                                        b->right->color = RBT_BLACK;
+                                    } else {
+                                        b->right->left = RBT_BLACK;
+                                        b->right->right = RBT_BLACK;
+                                    }
+                                } else /* 此时b->right无法自配平，需要b->left来救；但余下此种情况 b->left 必为红色，必有两个黑色子节点 */ {
+                                    b->left->color = RBT_BLACK;
+                                    RBT_RightDown(node->parent->right);
+                                    RBT_LeftDown(node->parent);
+                                } 
+                            }
+                        } else /* RBT_RED == b->color */ {
+                            RBT_LeftDown(node->parent);
+                            b->color = RBT_BLACK;
+                            RBT_LeftDown(b->left);
+                            node->parent->color = RBT_RED;
+                            if(RBT_RED == node->parent->right->color) {
+                                node->parent->right->color = RBT_BLACK;
+                                node->parent->right->left->color = RBT_RED;
+                                node->parent->right->right->color = RBT_RED;
+                            }
+                        }
+                    }
+                } else {
+                    // ...
+                }
+
+            }
+        } else {
+            // ...
+        }
+    }
+}
+
 RbTreeNode* RBT_Find(RbTreeNode* root, DataType data) {
     if(NULL == root || root == nil) {
         return NULL;
@@ -382,7 +382,4 @@ void RBT_InsertRebalance(RbTreeNode* node) {
             }
         }
     }
-}
-RbTreeNode* RBT_DeleteReblance(RbTreeNode* node) {
-    return NULL;
 }
